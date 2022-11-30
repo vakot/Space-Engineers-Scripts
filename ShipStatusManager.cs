@@ -111,9 +111,12 @@ Program()
 {
     Runtime.UpdateFrequency = UpdateFrequency.Update10;
 
+    ParseIni();
+    
     _SurfaceContentManager = new SurfaceContentManager(this);
 
     _ShipStatusManager = new ShipStatusManager(this);
+
     _ShipStatusManager.SetupSurfaces(_SurfaceContentManager);
 }
 
@@ -591,7 +594,7 @@ class ShipStatusManager
 }
 #endregion
 
-// Last update - 30.11.2022
+// Last update - 01.12.2022
 #region SurfaceContentManagerClass
 class SurfaceContentManager
 {
@@ -737,8 +740,8 @@ class SurfaceContentManager
                     int index = IndexOf(Manager);
                     if (index != -1)
                     {
+                        if (!IsEquals(Content, _Contents[index])) _Surfaces[index].Reset();
                         _Contents[index] = Content;
-                        _Surfaces[index].Reset();
                     }
                 }
             }
@@ -765,6 +768,18 @@ class SurfaceContentManager
             }
              
             return -1;
+        }
+        
+        private bool IsEquals(string[] Array1, string[] Array2)
+        {
+            if (Array1.Length != Array2.Length) return false;
+
+            for(int i = 0; i < Array1.Length; i++)
+            {
+                if (Array1[i] != Array2[i]) return false;
+            }
+
+            return true;
         }
         #endregion
 
