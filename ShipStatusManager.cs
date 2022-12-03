@@ -20,8 +20,6 @@
 
 /* Change it only before first run of program, rest of time use PB Custom Data */
 
-public string LCDTag { get; private set; } = "[LCD]";
-
 public readonly static List<string> RunStatus = new List<string>
 {
     "[|---]", 
@@ -42,19 +40,13 @@ public readonly static List<string> RunStatus = new List<string>
 
 // Block's
 ShipStatusManager _ShipStatusManager;
-
-static SurfaceContentManager _SurfaceContentManager;
+SurfaceContentManager _SurfaceContentManager;
 
 // Variables
 int Counter = 0;
 
-public const string Version = "1.2",
-                    IniSectionGeneral = "General",
-                    IniKeyLCDTag = "LCD name tag",
-
-                    IniSectionLCD = "Screen Settings",
-                    IniKeyContentType = "Surface";
-MyIni _ini = new MyIni();
+public const string Version = "1.3",
+                    IniSectionGeneral = "General";
 
 // Program
 void Status()
@@ -79,39 +71,14 @@ void Update()
 {
     Counter = 0;
 
-    ParseIni();
-
     _SurfaceContentManager.Update();
 
     _ShipStatusManager.Update();
 }
 
-void ParseIni()
-{
-    _ini.Clear();
-    if (_ini.TryParse(Me.CustomData))
-    {
-        LCDTag = _ini.Get(IniSectionGeneral, IniKeyLCDTag).ToString(LCDTag);
-    }
-    else if (!string.IsNullOrWhiteSpace(Me.CustomData))
-    {
-        _ini.EndContent = Me.CustomData;
-    }
-
-    _ini.Set(IniSectionGeneral, IniKeyLCDTag, LCDTag);
-
-    string Output = _ini.ToString();
-    if (Output != Me.CustomData)
-    {
-        Me.CustomData = Output;
-    }
-}
-
 Program() 
 {
     Runtime.UpdateFrequency = UpdateFrequency.Update10;
-
-    ParseIni();
     
     _SurfaceContentManager = new SurfaceContentManager(this);
 
@@ -120,7 +87,7 @@ Program()
     _ShipStatusManager.SetupSurfaces(_SurfaceContentManager);
 }
 
-void Main(String argument) 
+void Main(string argument) 
 {
     if (++Counter % 60 == 0) Update();
 
@@ -129,7 +96,7 @@ void Main(String argument)
     _SurfaceContentManager.DrawContent(60, Counter % 6 == 0);
 }
 
-// Last update - 29.11.2022
+// Last update - 01.12.2022
 #region ShipStatusManagerClass
 class ShipStatusManager
 {
@@ -193,6 +160,8 @@ class ShipStatusManager
         SurfaceContentManager.AddContentType("ores", DrawOresStats);
         SurfaceContentManager.AddContentType("ingots", DrawIngotsStats);
         SurfaceContentManager.AddContentType("cargolist", DrawCargoList);
+        SurfaceContentManager.AddContentType("H", DrawHorizontalProgressBarsTEST);
+        SurfaceContentManager.AddContentType("V", DrawVerticalProgressBarsTEST);
     }
 
     #region Power
@@ -455,41 +424,41 @@ class ShipStatusManager
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.65f));
 
         Manager.AddTextBuilder("Fe", new Vector2(0f, 0.025f), new Vector2(0.333f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Iron") / TargetOresCount["Iron"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ni", new Vector2(0.333f, 0.025f), new Vector2(0.666f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Nickel") / TargetOresCount["Nickel"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Co", new Vector2(0.666f, 0.025f), new Vector2(1f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Cobalt") / TargetOresCount["Cobalt"],
             1, MidpointRounding.AwayFromZero), 1)]);
 
         Manager.AddTextBuilder("Mg", new Vector2(0f, 0.225f), new Vector2(0.333f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Magnesium") / TargetOresCount["Magnesium"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Si", new Vector2(0.333f, 0.225f), new Vector2(0.666f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Silicon") / TargetOresCount["Silicon"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ur", new Vector2(0.666f, 0.225f), new Vector2(1f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Uranium") / TargetOresCount["Uranium"],
             1, MidpointRounding.AwayFromZero), 1)]);
 
         Manager.AddTextBuilder("Pt", new Vector2(0f, 0.425f), new Vector2(0.333f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Platinum") / TargetOresCount["Platinum"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ag", new Vector2(0.333f, 0.425f), new Vector2(0.666f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Silver") / TargetOresCount["Silver"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Au", new Vector2(0.666f, 0.425f), new Vector2(1f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Gold") / TargetOresCount["Gold"],
             1, MidpointRounding.AwayFromZero), 1)]);
 
@@ -499,15 +468,15 @@ class ShipStatusManager
 
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.2f), new Vector2(0.5f, 0f));
         Manager.AddTextBuilder("Ice", new Vector2(0f, 0f), new Vector2(0.33f, 0.2f), FontSize: 1.5f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Ice") / TargetOresCount["Ice"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("!Stone", new Vector2(0.33f, 0f), new Vector2(0.66f, 0.2f), FontSize: 1.5f,
-        Color: Colors[
+        color: Colors[
             1f - Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Stone") / TargetOresCount["Stone"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("!Scrap", new Vector2(0.66f, 0f), new Vector2(1f, 0.2f), FontSize: 1.5f,
-        Color: Colors[
+        color: Colors[
             1f - Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Scrap") / TargetOresCount["Scrap"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.SaveLine();
@@ -521,41 +490,41 @@ class ShipStatusManager
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.65f));
 
         Manager.AddTextBuilder("Fe", new Vector2(0f, 0.025f), new Vector2(0.3f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Iron") / TargetIngotsCount["Iron"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ni", new Vector2(0.3f, 0.025f), new Vector2(0.7f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Nickel") / TargetIngotsCount["Nickel"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Co", new Vector2(0.7f, 0.025f), new Vector2(1f, 0.225f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Cobalt") / TargetIngotsCount["Cobalt"],
             1, MidpointRounding.AwayFromZero), 1)]);
 
         Manager.AddTextBuilder("Mg", new Vector2(0f, 0.225f), new Vector2(0.3f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Magnesium") / TargetIngotsCount["Magnesium"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Si", new Vector2(0.3f, 0.225f), new Vector2(0.7f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Silicon") / TargetIngotsCount["Silicon"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ur", new Vector2(0.7f, 0.225f), new Vector2(1f, 0.425f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Uranium") / TargetIngotsCount["Uranium"],
             1, MidpointRounding.AwayFromZero), 1)]);
 
         Manager.AddTextBuilder("Pt", new Vector2(0f, 0.425f), new Vector2(0.3f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Platinum") / TargetIngotsCount["Platinum"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Ag", new Vector2(0.3f, 0.425f), new Vector2(0.7f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Silver") / TargetIngotsCount["Silver"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.AddTextBuilder("Au", new Vector2(0.7f, 0.425f), new Vector2(1f, 0.625f), FontSize: 2f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Gold") / TargetIngotsCount["Gold"],
             1, MidpointRounding.AwayFromZero), 1)]);
         
@@ -563,7 +532,7 @@ class ShipStatusManager
 
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.2f), new Vector2(0.5f, 0f));
         Manager.AddTextBuilder("Gravel", new Vector2(0, 0f), new Vector2(1, 0.2f), FontSize: 1.5f,
-        Color: Colors[
+        color: Colors[
             Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Stone") / TargetIngotsCount["Gravel"],
             1, MidpointRounding.AwayFromZero), 1)]);
         Manager.SaveLine();
@@ -584,11 +553,66 @@ class ShipStatusManager
                 
                 Manager.AddSquareProgressBarBuilder(FillLevel, new Vector2(0f, 0f), new Vector2(0.8f, 0.1f), 270);
                 Manager.AddTextBuilder(String.Format("{0:0.0}%", FillLevel * 100f), new Vector2(0.75f, 0f), new Vector2(1f, 0.1f), Alignment: TextAlignment.RIGHT);
-                Manager.AddTextBuilder($"[{i}] - {Inventory.CustomName}", new Vector2(0f, 0f), new Vector2(0.85f, 0.095f), Alignment: TextAlignment.LEFT, ExtraPadding: true, Color: SurfaceContentManager.SurfaceManager.BackgroundColor, FontSize: 0.7f);
+                Manager.AddTextBuilder($"[{i}] - {Inventory.CustomName}", new Vector2(0f, 0f), new Vector2(0.85f, 0.095f), Alignment: TextAlignment.LEFT, ExtraPadding: true, color: Manager.BackgroundColor, FontSize: 0.7f);
 
                 Manager.SaveLine();
             }
         }
+    }
+        
+    private void DrawHorizontalProgressBarsTEST(SurfaceContentManager.SurfaceManager Manager)
+    {
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), null, new Color(250, 150, 150));
+        Manager.AddSquareProgressBarBuilder(0.85f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 3,
+        color: Colors[(float)Math.Round(0.85f, 1, MidpointRounding.AwayFromZero)]);
+        Manager.AddSpriteBuilder("IconHydrogen", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
+        color: Manager.BackgroundColor);
+        Manager.SaveLine();
+
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), null, new Color(150, 150, 255));
+        Manager.AddSquareProgressBarBuilder(0.75f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 3,
+        color: Colors[(float)Math.Round(0.75f, 1, MidpointRounding.AwayFromZero)]);
+        Manager.AddSpriteBuilder("IconOxygen", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
+        color: Manager.BackgroundColor);
+        Manager.SaveLine();
+
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), new Vector2(0.9f, 0f), new Color(50, 255, 255));
+        Manager.AddSquareProgressBarBuilder(1f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 5, new Color(50, 255, 255));
+        Manager.AddSpriteBuilder("IconEnergy", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
+        color: Manager.BackgroundColor);
+        Manager.SaveLine();
+
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f));
+        Manager.AddSquareProgressBarBuilder(0.25f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270,
+        color: Colors[(float)Math.Round(0.25f, 1, MidpointRounding.AwayFromZero)]);
+        Manager.AddSpriteBuilder(@"Textures\FactionLogo\Builders\BuilderIcon_1.dds", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
+        color: Manager.BackgroundColor);
+        Manager.SaveLine();
+    }
+    private void DrawVerticalProgressBarsTEST(SurfaceContentManager.SurfaceManager Manager)
+    {
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(0.25f, 1f), null, new Color(250, 150, 150));
+        Manager.AddBorderBuilder(new Vector2(0.25f, 0f), new Vector2(0.5f, 1f), null, new Color(150, 150, 255));
+        Manager.AddBorderBuilder(new Vector2(0.5f, 0f), new Vector2(0.75f, 1f), new Vector2(0f, 0.8f), new Color(50, 255, 255));
+        Manager.AddBorderBuilder(new Vector2(0.75f, 0f), new Vector2(1f, 1f));
+
+        Manager.AddSquareProgressBarBuilder(0.85f, new Vector2(0f, 0f), new Vector2(0.25f, 1f), 0, 3,
+        color: Colors[(float)Math.Round(0.85f, 1, MidpointRounding.AwayFromZero)]);
+        Manager.AddSquareProgressBarBuilder(0.75f, new Vector2(0.25f, 0f), new Vector2(0.5f, 1f), 0, 3,
+        color: Colors[(float)Math.Round(0.75f, 1, MidpointRounding.AwayFromZero)]);
+        Manager.AddSquareProgressBarBuilder(1f, new Vector2(0.5f, 0f), new Vector2(0.75f, 1f), 0, 5, new Color(50, 255, 255));
+        Manager.AddSquareProgressBarBuilder(0.25f, new Vector2(0.75f, 0f), new Vector2(1f, 1f), 0,
+        color: Colors[(float)Math.Round(0.25f, 1, MidpointRounding.AwayFromZero)]);
+
+        Manager.AddSpriteBuilder("IconHydrogen", new Vector2(0.025f, 0.75f), new Vector2(0.225f, 1f),
+        color: Manager.BackgroundColor);
+        Manager.AddSpriteBuilder("IconOxygen", new Vector2(0.025f + 0.25f, 0.75f), new Vector2(0.225f + 0.25f, 1f),
+        color: Manager.BackgroundColor);
+        Manager.AddSpriteBuilder("IconEnergy", new Vector2(0.025f + 0.5f, 0.75f), new Vector2(0.225f + 0.5f, 1f),
+        color: Manager.BackgroundColor);
+        Manager.AddSpriteBuilder(@"Textures\FactionLogo\Builders\BuilderIcon_1.dds", new Vector2(0.025f + 0.75f, 0.75f), new Vector2(0.225f + 0.75f, 1f),
+        color: Manager.BackgroundColor);
+        Manager.SaveLine();
     }
     #endregion
 }
@@ -597,8 +621,14 @@ class ShipStatusManager
 // Last update - 01.12.2022
 #region SurfaceContentManagerClass
 class SurfaceContentManager
-{
+{   
     private Program _Program;
+
+    MyIni _ini = new MyIni();
+    public const string IniSectionSurfaceGeneral = "Surface Manager - General",
+                        IniKeyLCDTag = "LCD name tag";
+
+    public string LCDTag { get; private set; } = "[LCD]";
 
     private List<SurfaceProvider> _Providers = new List<SurfaceProvider>();
     private static Dictionary<string, Action<SurfaceManager>> _ContentTypes = new Dictionary<string, Action<SurfaceManager>>();
@@ -612,14 +642,16 @@ class SurfaceContentManager
 
     public void Update()
     {
+        ParseIni();
+
         // remove provider's that don't contain's [LCDTag] or isn't valid
-        _Providers = _Providers.Where(x => x.CustomName.Contains(_Program.LCDTag) && IsValid(x)).ToList();
+        _Providers = _Providers.Where(x => x.CustomName.Contains(LCDTag) && IsValid(x)).ToList();
 
         List<IMyTextSurfaceProvider> Providers = new List<IMyTextSurfaceProvider>();
         _Program.GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(
             Providers,
             x => (x as IMyTerminalBlock).IsSameConstructAs(_Program.Me)
-            && (x as IMyTerminalBlock).CustomName.Contains(_Program.LCDTag)
+            && (x as IMyTerminalBlock).CustomName.Contains(LCDTag)
             && x.SurfaceCount > 0
         );
 
@@ -628,6 +660,27 @@ class SurfaceContentManager
 
         // update provider's content
         foreach (SurfaceProvider _Provider in _Providers) _Provider.Update();
+    }
+
+    private void ParseIni()
+    {
+        _ini.Clear();
+        if (_ini.TryParse(_Program.Me.CustomData))
+        {
+            LCDTag = _ini.Get(IniSectionSurfaceGeneral, IniKeyLCDTag).ToString(LCDTag);
+        }
+        else if (!string.IsNullOrWhiteSpace(_Program.Me.CustomData))
+        {
+            _ini.EndContent = _Program.Me.CustomData;
+        }
+
+        _ini.Set(IniSectionSurfaceGeneral, IniKeyLCDTag, LCDTag);
+
+        string Output = _ini.ToString();
+        if (Output != _Program.Me.CustomData)
+        {
+            _Program.Me.CustomData = Output;
+        }
     }
 
     #region Draw
@@ -679,6 +732,10 @@ class SurfaceContentManager
     public class SurfaceProvider
     {
         private MyIni _ini = new MyIni();
+        public const string IniSectionLCD = "Screen",
+                            IniKeyContentType = "Content type",
+                            IniKeyBackgroundColor = "Background color",
+                            IniKeyDefaultColor = "Default color";
 
         private IMyTextSurfaceProvider _Provider;
 
@@ -697,57 +754,84 @@ class SurfaceContentManager
 
         public void Update()
         {
-            ParseIni();
-        }
-
-        private void ParseIni()
-        {
-            IMyTerminalBlock Block = _Provider as IMyTerminalBlock;
-
             for (int i = 0; i < _Provider.SurfaceCount; i++)
             {
-                _ini.Clear();
-                string[] Content = new string[] { "none" };
+                ParseIni(i);
+            }
+        }
 
-                if (_ini.TryParse(Block.CustomData))
-                {
-                    Content = _ini.Get(IniSectionLCD, $"{IniKeyContentType} ({i})").ToString("none").Split(',');
-                }
-                else if (!string.IsNullOrWhiteSpace(Block.CustomData))
-                {
-                    _ini.EndContent = Block.CustomData;
-                }
+        private void ParseIni(int i = 0)
+        {
+            IMyTerminalBlock Block = _Provider as IMyTerminalBlock;
+            SurfaceManager Manager = new SurfaceManager(_Provider.GetSurface(i));
 
-                _ini.Set(IniSectionLCD, $"{IniKeyContentType} ({i})", string.Join(",", Content));
+            _ini.Clear();
 
-                string Output = _ini.ToString();
-                if (Output != Block.CustomData)
-                {
-                    Block.CustomData = Output;
-                }
+            string backgroundColor = Manager.BackgroundColor.ToString();
+            string defaultColor = Manager.DefaultColor.ToString();
 
-                if (Content.Length == 1 && Content[0] == "none") continue;
+            string[] Content = new string[] { "none" };
 
-                SurfaceManager Manager = new SurfaceManager(_Provider.GetSurface(i));
+            if (_ini.TryParse(Block.CustomData))
+            {
+                Content = _ini.Get($"{IniSectionLCD} ({i})", IniKeyContentType).ToString("none").Split(',');
+                backgroundColor = _ini.Get($"{IniSectionLCD} ({i})", IniKeyBackgroundColor).ToString(backgroundColor);
+                defaultColor = _ini.Get($"{IniSectionLCD} ({i})", IniKeyDefaultColor).ToString(defaultColor);
+            }
+            else if (!string.IsNullOrWhiteSpace(Block.CustomData))
+            {
+                _ini.EndContent = Block.CustomData;
+            }
 
-                if (!IsExist(Manager))
-                {
-                    _Surfaces.Add(Manager);
-                    _Contents.Add(Content);
-                }
-                else
-                {
-                    int index = IndexOf(Manager);
-                    if (index != -1)
-                    {
-                        if (!IsEquals(Content, _Contents[index])) _Surfaces[index].Reset();
-                        _Contents[index] = Content;
-                    }
-                }
+            _ini.Set($"{IniSectionLCD} ({i})", IniKeyContentType, string.Join(",", Content));
+            _ini.Set($"{IniSectionLCD} ({i})", IniKeyBackgroundColor, backgroundColor);
+            _ini.Set($"{IniSectionLCD} ({i})", IniKeyDefaultColor, defaultColor);
+
+            string Output = _ini.ToString();
+            if (Output != Block.CustomData)
+            {
+                Block.CustomData = Output;
+            }
+
+            if (Content.Length == 1 && Content[0] == "none") return;
+
+            if (!IsExist(Manager))
+            {
+                Manager.SetColors(TryParseColor(backgroundColor), TryParseColor(defaultColor));
+                _Surfaces.Add(Manager);
+                _Contents.Add(Content);
+            }
+            else
+            {
+                int index = IndexOf(Manager);
+                if (index == -1) return;
+                
+                if (!IsEquals(Content, _Contents[index]))_Surfaces[index].Reset();
+                _Surfaces[index].SetColors(TryParseColor(backgroundColor), TryParseColor(defaultColor));
+                _Contents[index] = Content;
             }
         }
 
         #region Helpers
+        private Color TryParseColor(string Str)
+        {
+            try
+            {
+                if (Str[0] != '{' || Str[Str.Length - 1] != '}') throw new Exception();
+
+                string[] Split = Str.Substring(1, Str.Length - 2).Split(' ');
+                if (Split.Length != 4) throw new Exception();
+
+                int[] RGBA = new int[] { 0, 0, 0, 255 };
+                for(int i = 0; i < Split.Length; i++)
+                {
+                    RGBA[i] = int.Parse(Split[i].Substring(2, Split[i].Length - 2));
+                }
+
+                return new Color(RGBA[0], RGBA[1], RGBA[2], RGBA[3]);
+            }
+            catch (Exception exception) { return Color.Transparent; }
+        }
         private bool IsExist(SurfaceManager Manager)
         {
             int Hash = Manager.GetHashCode();
@@ -841,9 +925,8 @@ class SurfaceContentManager
         private int _ScrollDirection = 1;
         private float _ScrollValue = 0f;
 
-        public readonly static Color BackgroundColor = new Color(0, 88, 151);
-        public readonly static Color DefaultColor = new Color(179, 237, 255);
-        public readonly static Color GhostColor = new Color(134, 195, 226);
+        public Color BackgroundColor { get; private set; } = new Color(0, 88, 151);
+        public Color DefaultColor { get; private set; } = new Color(179, 237, 255);
 
         public override int GetHashCode() => _Surface.GetHashCode(); 
 
@@ -866,7 +949,7 @@ class SurfaceContentManager
             string Text,
             Vector2 TopLeftCorner,
             Vector2 BottomRightCorner,
-            Color? Color = null,
+            Color? color = null,
             TextAlignment Alignment = TextAlignment.CENTER,
             bool ExtraPadding = false,
             float FontSize = 1f
@@ -880,7 +963,7 @@ class SurfaceContentManager
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
             
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             if (Alignment == TextAlignment.RIGHT) Position.X += ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X * 2f: 0);
             if (Alignment == TextAlignment.LEFT) Position.X -= ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X * 2f : 0);
@@ -893,7 +976,7 @@ class SurfaceContentManager
             }
             Position = new Vector2(Position.X, Position.Y - TextSize.Y * 0.5f);
 
-            _Sprites.Add(new MySprite(SpriteType.TEXT, Text, Position, ContentSize - _Padding * 2f, Color ?? DefaultColor, "Debug", Alignment, FontSize));
+            _Sprites.Add(new MySprite(SpriteType.TEXT, Text, Position, ContentSize - _Padding * 2f, color ?? DefaultColor, "Debug", Alignment, FontSize));
         }
         public void AddCircleProgressBarBuilder(
             float Percentage,
@@ -903,12 +986,15 @@ class SurfaceContentManager
             float Sector = 270,
             float Rotation = 0,
             int Cells = 1,
-            Color? Color = null,
+            Color? color = null,
             bool Reverse = false
         ) {
             if (BottomRightCorner.X <= TopLeftCorner.X || BottomRightCorner.Y <= TopLeftCorner.Y) return;
 
             Percentage = Math.Max(Math.Min(Percentage, 1f), 0f);
+
+            Color _Color = color ?? DefaultColor;
+            Color _GhostColor = new Color(_Color, 0.1f);
 
             Vector2 BlockSize = _Viewport.Size * (BottomRightCorner - TopLeftCorner);
             Vector2 ContentSize = BlockSize - _Padding;
@@ -918,7 +1004,7 @@ class SurfaceContentManager
             float Radius = CircleSize * 0.5f;
             
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             Vector2 Offset = new Vector2(0f, 0f);
             float SeparatorWidth = 2f * (float)Math.PI * Radius / 180;
@@ -934,7 +1020,7 @@ class SurfaceContentManager
                     -(float)Math.Sin(MathHelper.ToRadians(Angle + Rotation)) * Radius
                 );
 
-                DrawLine((Position + Offset * (1 - Size)), Position + Offset, GhostColor, SeparatorWidth);
+                DrawLine((Position + Offset * (1 - Size)), Position + Offset, _GhostColor, SeparatorWidth);
             }
 
             // Filled
@@ -948,7 +1034,7 @@ class SurfaceContentManager
                     -(float)Math.Sin(MathHelper.ToRadians(Angle + Rotation)) * Radius
                 );
 
-                DrawLine((Position + Offset * (1 - Size)), Position + Offset, Color ?? DefaultColor, SeparatorWidth);
+                DrawLine((Position + Offset * (1 - Size)), Position + Offset, _Color, SeparatorWidth);
             }
 
             if (Cells <= 1) return;
@@ -973,18 +1059,21 @@ class SurfaceContentManager
             Vector2 BottomRightCorner,
             int Rotation = 0,
             int Cells = 1,
-            Color? Color = null
+            Color? color = null
         ) {
             if (BottomRightCorner.X <= TopLeftCorner.X || BottomRightCorner.Y <= TopLeftCorner.Y) return;
 
             Percentage = Math.Max(Math.Min(Percentage, 1f), 0f);
+            
+            Color _Color = color ?? DefaultColor;
+            Color _GhostColor = new Color(_Color, 0.1f);
 
             Vector2 BlockSize = _Viewport.Size * (BottomRightCorner - TopLeftCorner);
             Vector2 ContentSize = BlockSize - _Padding;
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
 
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             Vector2 BarSize = ContentSize - _Padding * 2f;
             Vector2 ActiveSize, BarPosition;
@@ -1027,9 +1116,9 @@ class SurfaceContentManager
             }
             
             // Unfilled
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BarSize, GhostColor));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BarSize, _GhostColor));
             // Body
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", BarPosition, ActiveSize, Color ?? DefaultColor));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", BarPosition, ActiveSize, _Color));
 
             if (Cells <= 1) return;
 
@@ -1044,7 +1133,7 @@ class SurfaceContentManager
             List<float> Values,
             Vector2 TopLeftCorner,
             Vector2 BottomRightCorner,
-            Color? Color = null,
+            Color? color = null,
             bool DisplayPercentage = true,
             bool Filled = false
         ) {
@@ -1053,11 +1142,13 @@ class SurfaceContentManager
 
             float FontSize = 1.25f * _Scale;
 
+            Color _Color = color ?? DefaultColor;
+
             Vector2 BlockSize = _Viewport.Size * (BottomRightCorner - TopLeftCorner);
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
 
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             Vector2 ContentSize = BlockSize - _Padding;
             Vector2 GraphBoxSize = ContentSize - _Padding;
@@ -1083,9 +1174,9 @@ class SurfaceContentManager
                 Value = Math.Max(Math.Min(Values[i], 1), 0);
                 Vector2 EndPoint = new Vector2(ZeroPoint.X + i * Offset, ZeroPoint.Y - GraphBoxSize.Y * Value);
 
-                DrawLine(StartPoint, EndPoint, Color ?? DefaultColor, Size);
-                if (i == 1) _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", StartPoint, new Vector2(Size, Size), Color ?? DefaultColor));
-                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", EndPoint, new Vector2(Size, Size), Color ?? DefaultColor));
+                DrawLine(StartPoint, EndPoint, _Color, Size);
+                if (i == 1) _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", StartPoint, new Vector2(Size, Size), _Color));
+                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", EndPoint, new Vector2(Size, Size), _Color));
 
                 // Fill
                 if (Filled)
@@ -1096,7 +1187,7 @@ class SurfaceContentManager
                     while (X <= EndPoint.X + _Scale)
                     {
                         float Y = (X - StartPoint.X) / Difference.X * Difference.Y;
-                        DrawLine(new Vector2(X, ZeroPoint.Y), new Vector2(X, StartPoint.Y + Y), Color ?? DefaultColor, Size * 0.5f);
+                        DrawLine(new Vector2(X, ZeroPoint.Y), new Vector2(X, StartPoint.Y + Y), _Color, Size * 0.5f);
                         X++;
                     }
                 }
@@ -1109,9 +1200,9 @@ class SurfaceContentManager
                 Vector2 Start = ZeroPoint;
                 Vector2 End = new Vector2(ZeroPoint.X + GraphBoxSize.X, ZeroPoint.Y);
 
-                DrawLine(Start, End, Color ?? DefaultColor, Size);
-                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", Start, new Vector2(Size, Size), Color ?? DefaultColor));
-                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", End, new Vector2(Size, Size), Color ?? DefaultColor));
+                DrawLine(Start, End, _Color, Size);
+                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", Start, new Vector2(Size, Size), _Color));
+                _Sprites.Add(new MySprite(SpriteType.TEXTURE, "Circle", End, new Vector2(Size, Size), _Color));
             }
             // Running Percentage 
             if (DisplayPercentage) _Sprites.Add(new MySprite(
@@ -1119,7 +1210,7 @@ class SurfaceContentManager
                 String.Format("{0:0.0}%", Values[Values.Count - 1] * 100f),
                 new Vector2(StartPoint.X + TextSize.X - _Padding.X * 0.25f, StartPoint.Y - TextSize.Y * 0.5f),
                 null,
-                Color ?? DefaultColor,
+                _Color,
                 "Debug",
                 TextAlignment.RIGHT,
                 FontSize
@@ -1129,7 +1220,7 @@ class SurfaceContentManager
             Vector2 TopLeftCorner,
             Vector2 BottomRightCorner,
             Vector2? Gaps = null,
-            Color? Color = null
+            Color? color = null
         ) {
             if (BottomRightCorner.X <= TopLeftCorner.X || BottomRightCorner.Y <= TopLeftCorner.Y) return;
 
@@ -1138,10 +1229,10 @@ class SurfaceContentManager
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
             
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             // Border
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, ContentSize, Color ?? DefaultColor));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, ContentSize, color ?? DefaultColor));
 
             if (Gaps != null)
             {
@@ -1158,7 +1249,7 @@ class SurfaceContentManager
             string Type,
             Vector2 TopLeftCorner,
             Vector2 BottomRightCorner,
-            Color? Color = null,
+            Color? color = null,
             TextAlignment Alignment = TextAlignment.CENTER,
             bool KeepAspectRatio = true
         ) {
@@ -1169,40 +1260,39 @@ class SurfaceContentManager
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
                     
             // Fix Size
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, new Color(0, 0, 0, 0)));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
             float Size = Math.Min(ContentSize.X, ContentSize.Y);
 
             if (Alignment == TextAlignment.RIGHT) Position.X += (ContentSize.X - Size) * 0.5f;
             if (Alignment == TextAlignment.LEFT) Position.X -= (ContentSize.X - Size) * 0.5f;
 
-            if (KeepAspectRatio)
-            {
-                ContentSize = new Vector2(Size, Size);
-            }
+            if (KeepAspectRatio) ContentSize = new Vector2(Size, Size);
 
-            _Sprites.Add(new MySprite(SpriteType.TEXTURE, Type, Position, ContentSize - _Padding * 2f, Color ?? DefaultColor));
+            _Sprites.Add(new MySprite(SpriteType.TEXTURE, Type, Position, ContentSize - _Padding * 2f, color ?? DefaultColor));
         }
         #endregion
 
         #region Changers
+        public void SetColors(Color backgroundColor, Color defaultColor)
+        {
+            BackgroundColor = backgroundColor;
+            DefaultColor = defaultColor;
+        }
         public void Reset()
         {
             _ScrollDirection = 1;
             _ScrollValue = 0f;
-
-            SetupDrawSurface();
-            Clear();
         }
         public void SaveLine() 
         {
-            _Lines.Add(_Sprites);
-            _Sprites = new List<MySprite>();
+            _Lines.Add(new List<MySprite>(_Sprites));
+            _Sprites.Clear();
         }
         public void Clear()
         {
-            _Lines = new List<List<MySprite>>();
-            _Sprites = new List<MySprite>();
+            _Lines.Clear();
+            _Sprites.Clear();
         }
         private void SetupDrawSurface()
         {
