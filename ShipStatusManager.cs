@@ -45,7 +45,7 @@ SurfaceContentManager _SurfaceContentManager;
 // Variables
 int Counter = 0;
 
-public const string Version = "1.3",
+public const string Version = "1.4",
                     IniSectionGeneral = "General";
 
 // Program
@@ -93,10 +93,10 @@ void Main(string argument)
 
     Status();
 
-    _SurfaceContentManager.DrawContent(60, Counter % 6 == 0);
+    _SurfaceContentManager.DrawContent(20, Counter % 3 == 0);
 }
 
-// Last update - 01.12.2022
+// Last update - 05.12.2022
 #region ShipStatusManagerClass
 class ShipStatusManager
 {
@@ -110,29 +110,41 @@ class ShipStatusManager
     public Dictionary<string, float> TargetOresCount = new Dictionary<string, float>() {
         { "Iron", 100000f },
         { "Nickel", 25000f },
-        { "Cobalt", 10000f },
-        { "Magnesium", 10000f },
-        { "Silicon", 10000f },
+        { "Cobalt", 20000f },
+        { "Magnesium", 20000f },
+        { "Silicon", 25000f },
         { "Uranium", 5000f },
         { "Platinum", 5000f },
         { "Silver", 10000f },
         { "Gold", 10000f },
-        { "Stone", 10000f },
-        { "Ice", 10000f },
-        { "Scrap", 10000f }
+        { "Ice", 50000f },
+        { "!Stone", 50000f },
+        { "!Scrap", 10000f }
     };
 
     public Dictionary<string, float> TargetIngotsCount = new Dictionary<string, float>() {
-        { "Iron", 10000f },
-        { "Nickel", 2500f },
-        { "Cobalt", 1000f },
-        { "Magnesium", 1000f },
-        { "Silicon", 1000f },
-        { "Uranium", 500f },
-        { "Platinum", 500f },
-        { "Silver", 1000f },
-        { "Gold", 1000f },
-        { "Gravel", 1000f },
+        { "Iron", 100000f },
+        { "Nickel", 25000f },
+        { "Cobalt", 20000f },
+        { "Magnesium", 20000f },
+        { "Silicon", 25000f },
+        { "Uranium", 1000f },
+        { "Platinum", 1000f },
+        { "Silver", 10000f },
+        { "Gold", 10000f },
+        { "Gravel", 50000f },
+    };
+
+    public Dictionary<string, string> Shortcuts = new Dictionary<string, string>() {
+        { "Iron", "Fe" },
+        { "Nickel", "Ni" },
+        { "Cobalt", "Co" },
+        { "Magnesium", "Mg" },
+        { "Silicon", "Si" },
+        { "Uranium", "Ur" },
+        { "Platinum", "Pt" },
+        { "Silver", "Ag" },
+        { "Gold", "Au" }
     };
 
     public ShipStatusManager(Program Program)
@@ -159,9 +171,13 @@ class ShipStatusManager
         SurfaceContentManager.AddContentType("powergraph", DrawPowerGraph);
         SurfaceContentManager.AddContentType("ores", DrawOresStats);
         SurfaceContentManager.AddContentType("ingots", DrawIngotsStats);
-        SurfaceContentManager.AddContentType("cargolist", DrawCargoList);
-        SurfaceContentManager.AddContentType("H", DrawHorizontalProgressBarsTEST);
-        SurfaceContentManager.AddContentType("V", DrawVerticalProgressBarsTEST);
+        SurfaceContentManager.AddContentType("debug", Debug);
+        SurfaceContentManager.AddContentType("assemblers", DrawAssemblersList);
+        SurfaceContentManager.AddContentType("refineries", DrawRefineriesList);
+        SurfaceContentManager.AddContentType("containers", DrawCargoContainersList);
+        SurfaceContentManager.AddContentType("reactors", DrawReactorList);
+        SurfaceContentManager.AddContentType("inventories", DrawInventoriesList);
+        SurfaceContentManager.AddContentType("inventory", DrawInventoryList);
     }
 
     #region Power
@@ -373,21 +389,62 @@ class ShipStatusManager
         else return 0;
     }
 
-    public float ItemCount(string typeId, string subTypeId)
+    public float ItemCount(MyItemType ItemType)
     {
         float Amount = 0f;
-        foreach(IMyTerminalBlock Inventory in _Inventories)
+        foreach(IMyTerminalBlock Block in _Inventories)
         {
             try
             {
-                for (int i = 0; i < Inventory.InventoryCount; i++)
+                for (int i = 0; i < Block.InventoryCount; i++)
                 {
-                    Amount += Inventory.GetInventory(i).GetItemAmount(new MyItemType(typeId, subTypeId)).ToIntSafe();
+                    Amount += Block.GetInventory(i).GetItemAmount(ItemType).ToIntSafe();
                 }
             }
             catch(Exception exception) { }
         }
         return Amount;
+    }
+    
+    private Dictionary<MyItemType, float> GetInventoryItems(string TypeId = null, string SubtypeId = null)
+    {
+        Dictionary<MyItemType, float> Items = new Dictionary<MyItemType, float>();
+
+        foreach (IMyTerminalBlock Block in _Inventories)
+        {
+            for (int i = 0; i < Block.InventoryCount; i++)
+            {
+                try
+                {
+                    List<MyInventoryItem> ItemsList = new List<MyInventoryItem>();
+
+                    Block.GetInventory(i).GetItems(ItemsList);
+
+                    foreach (MyInventoryItem Item in ItemsList)
+                    {
+                        if (TypeId != null && Item.Type.TypeId.ToString() != TypeId) continue;
+                        if (SubtypeId != null && Item.Type.SubtypeId.ToString() != SubtypeId) continue;
+
+                        if (Item.Amount <= 0) continue;
+                        
+                        // if exist - change amount
+                        if (Items.ContainsKey(Item.Type))
+                        {
+                            Items[Item.Type] += (float)Item.Amount;
+                        }
+                        // if not exist - add and set amount
+                        else
+                        {
+                            Items.Add(Item.Type, (float)Item.Amount);
+                        }
+                        
+                    }
+                }
+                catch(Exception exception) { }
+            }
+        }
+
+        return Items;
     }
     #endregion
 
@@ -406,6 +463,12 @@ class ShipStatusManager
         { 1.0f, new Color(30, 220, 30) }
     };
 
+    private void Debug(SurfaceContentManager.SurfaceManager Manager)
+    {
+        Manager.AddTextBuilder("--- Debug ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
+        Manager.SaveLine();
+    }
+
     private void DrawPowerGraph(SurfaceContentManager.SurfaceManager Manager)
     {
         _PowerConsumptionStory.Add(CurrentPowerOutput / MaxPowerOutput);
@@ -418,207 +481,249 @@ class ShipStatusManager
 
     private void DrawOresStats(SurfaceContentManager.SurfaceManager Manager)
     {
+        Dictionary<MyItemType, float> Ores = GetInventoryItems(TypeId: "MyObjectBuilder_Ore");
+
         Manager.AddTextBuilder("--- Ores Stash ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
         Manager.SaveLine();
 
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.65f));
 
-        Manager.AddTextBuilder("Fe", new Vector2(0f, 0.025f), new Vector2(0.333f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Iron") / TargetOresCount["Iron"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ni", new Vector2(0.333f, 0.025f), new Vector2(0.666f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Nickel") / TargetOresCount["Nickel"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Co", new Vector2(0.666f, 0.025f), new Vector2(1f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Cobalt") / TargetOresCount["Cobalt"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+        float Vertical = 0.025f;
+        float Horizontal = 0f;
 
-        Manager.AddTextBuilder("Mg", new Vector2(0f, 0.225f), new Vector2(0.333f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Magnesium") / TargetOresCount["Magnesium"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Si", new Vector2(0.333f, 0.225f), new Vector2(0.666f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Silicon") / TargetOresCount["Silicon"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ur", new Vector2(0.666f, 0.225f), new Vector2(1f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Uranium") / TargetOresCount["Uranium"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+        // 9x9 top table
+        foreach (string Key in TargetOresCount.Keys.ToList().GetRange(0, 9))
+        {
+            bool isReverse = Key[0] == '!';
+            string _Key = isReverse ? Key.Substring(1, Key.Length - 1) : Key;
 
-        Manager.AddTextBuilder("Pt", new Vector2(0f, 0.425f), new Vector2(0.333f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Platinum") / TargetOresCount["Platinum"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ag", new Vector2(0.333f, 0.425f), new Vector2(0.666f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Silver") / TargetOresCount["Silver"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Au", new Vector2(0.666f, 0.425f), new Vector2(1f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Gold") / TargetOresCount["Gold"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+            float Amount = Ores.ContainsKey(MyItemType.MakeOre(_Key)) ? Ores[MyItemType.MakeOre(_Key)] : 0;
+            float TargetAmount = TargetOresCount[Key];
 
+            string Lable = Shortcuts.ContainsKey(_Key) ? Shortcuts[_Key] : Key;
 
+            float Percentage = Amount / TargetAmount;
+            Percentage = isReverse ? 1f - Percentage : Percentage;
+            Percentage = (float)Math.Round(Percentage, 1, MidpointRounding.AwayFromZero);
+            Percentage = Math.Max(Math.Min(Percentage, 1), 0);
+
+            Manager.AddTextBuilder(Lable, new Vector2(Horizontal, Vertical), new Vector2(Horizontal + 1f / 3f, Vertical + 0.2f), FontSize: 2f,
+            color: Colors[Percentage]);
+
+            Horizontal += 1f / 3f;
+            if (Horizontal >= 1f)
+            {
+                Horizontal = 0f;
+                Vertical += 0.2f;
+            }
+        }
         Manager.SaveLine();
-
-
+        
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.2f), new Vector2(0.5f, 0f));
-        Manager.AddTextBuilder("Ice", new Vector2(0f, 0f), new Vector2(0.33f, 0.2f), FontSize: 1.5f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Ice") / TargetOresCount["Ice"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("!Stone", new Vector2(0.33f, 0f), new Vector2(0.66f, 0.2f), FontSize: 1.5f,
-        color: Colors[
-            1f - Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Stone") / TargetOresCount["Stone"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("!Scrap", new Vector2(0.66f, 0f), new Vector2(1f, 0.2f), FontSize: 1.5f,
-        color: Colors[
-            1f - Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ore", "Scrap") / TargetOresCount["Scrap"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.SaveLine();
-    }
 
+        Vertical = 0.025f;
+        Horizontal = 0f;
+
+        // 3x1 bottom table
+        foreach (string Key in TargetOresCount.Keys.ToList().GetRange(9, TargetOresCount.Count - 9))
+        {
+            bool isReverse = Key[0] == '!';
+            string _Key = isReverse ? Key.Substring(1, Key.Length - 1) : Key;
+
+            float Amount = Ores.ContainsKey(MyItemType.MakeOre(_Key)) ? Ores[MyItemType.MakeOre(_Key)] : 0;
+            float TargetAmount = TargetOresCount[Key];
+
+            string Lable = Shortcuts.ContainsKey(_Key) ? Shortcuts[_Key] : Key;
+
+            float Percentage = Amount / TargetAmount;
+            Percentage = isReverse ? 1f - Percentage : Percentage;
+            Percentage = (float)Math.Round(Percentage, 1, MidpointRounding.AwayFromZero);
+            Percentage = Math.Max(Math.Min(Percentage, 1), 0);
+
+            Manager.AddTextBuilder(Lable, new Vector2(Horizontal, 0f), new Vector2(Horizontal + 1f / 3f, 0.2f), FontSize: 2f,
+            color: Colors[Percentage]);
+
+            Horizontal += 1f / 3f;
+        }
+    }
     private void DrawIngotsStats(SurfaceContentManager.SurfaceManager Manager)
     {
+        Dictionary<MyItemType, float> Ingots = GetInventoryItems(TypeId: "MyObjectBuilder_Ingot");
+
         Manager.AddTextBuilder("--- Ingot's Stash ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
         Manager.SaveLine();
 
         Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.65f));
 
-        Manager.AddTextBuilder("Fe", new Vector2(0f, 0.025f), new Vector2(0.3f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Iron") / TargetIngotsCount["Iron"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ni", new Vector2(0.3f, 0.025f), new Vector2(0.7f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Nickel") / TargetIngotsCount["Nickel"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Co", new Vector2(0.7f, 0.025f), new Vector2(1f, 0.225f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Cobalt") / TargetIngotsCount["Cobalt"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+        float Vertical = 0.025f;
+        float Horizontal = 0f;
 
-        Manager.AddTextBuilder("Mg", new Vector2(0f, 0.225f), new Vector2(0.3f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Magnesium") / TargetIngotsCount["Magnesium"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Si", new Vector2(0.3f, 0.225f), new Vector2(0.7f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Silicon") / TargetIngotsCount["Silicon"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ur", new Vector2(0.7f, 0.225f), new Vector2(1f, 0.425f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Uranium") / TargetIngotsCount["Uranium"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+        // 9x9 top table
+        foreach (string Key in TargetIngotsCount.Keys.ToList().GetRange(0, 9))
+        {
+            bool isReverse = Key[0] == '!';
+            string _Key = isReverse ? Key.Substring(1, Key.Length - 1) : Key;
 
-        Manager.AddTextBuilder("Pt", new Vector2(0f, 0.425f), new Vector2(0.3f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Platinum") / TargetIngotsCount["Platinum"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Ag", new Vector2(0.3f, 0.425f), new Vector2(0.7f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Silver") / TargetIngotsCount["Silver"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.AddTextBuilder("Au", new Vector2(0.7f, 0.425f), new Vector2(1f, 0.625f), FontSize: 2f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Gold") / TargetIngotsCount["Gold"],
-            1, MidpointRounding.AwayFromZero), 1)]);
+            float Amount = Ingots.ContainsKey(MyItemType.MakeIngot(_Key)) ? Ingots[MyItemType.MakeIngot(_Key)] : 0;
+            float TargetAmount = TargetIngotsCount[Key];
+
+            string Lable = Shortcuts.ContainsKey(_Key) ? Shortcuts[_Key] : Key;
+
+            float Percentage = Amount / TargetAmount;
+            Percentage = isReverse ? 1f - Percentage : Percentage;
+            Percentage = (float)Math.Round(Percentage, 1, MidpointRounding.AwayFromZero);
+            Percentage = Math.Max(Math.Min(Percentage, 1), 0);
+
+            Manager.AddTextBuilder(Lable, new Vector2(Horizontal, Vertical), new Vector2(Horizontal + 1f / 3f, Vertical + 0.2f), FontSize: 2f,
+            color: Colors[Percentage]);
+
+            Horizontal += 1f / 3f;
+            if (Horizontal >= 1f)
+            {
+                Horizontal = 0f;
+                Vertical += 0.2f;
+            }
+        }
+        Manager.SaveLine();
         
-        Manager.SaveLine();
+        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.2f), new Vector2(0.5f, 0f));
 
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1, 0.2f), new Vector2(0.5f, 0f));
-        Manager.AddTextBuilder("Gravel", new Vector2(0, 0f), new Vector2(1, 0.2f), FontSize: 1.5f,
-        color: Colors[
-            Math.Min((float)Math.Round(ItemCount("MyObjectBuilder_Ingot", "Stone") / TargetIngotsCount["Gravel"],
-            1, MidpointRounding.AwayFromZero), 1)]);
-        Manager.SaveLine();
+        Vertical = 0.025f;
+        Horizontal = 0f;
+
+        // 3x1 bottom table
+        foreach (string Key in TargetIngotsCount.Keys.ToList().GetRange(9, TargetIngotsCount.Count - 9))
+        {
+            bool isReverse = Key[0] == '!';
+            string _Key = isReverse ? Key.Substring(1, Key.Length - 1) : Key;
+
+            float Amount = Ingots.ContainsKey(MyItemType.MakeIngot(_Key)) ? Ingots[MyItemType.MakeIngot(_Key)] : 0;
+            float TargetAmount = TargetIngotsCount[Key];
+
+            string Lable = Shortcuts.ContainsKey(_Key) ? Shortcuts[_Key] : Key;
+
+            float Percentage = Amount / TargetAmount;
+            Percentage = isReverse ? 1f - Percentage : Percentage;
+            Percentage = (float)Math.Round(Percentage, 1, MidpointRounding.AwayFromZero);
+            Percentage = Math.Max(Math.Min(Percentage, 1), 0);
+
+            Manager.AddTextBuilder(Lable, new Vector2(Horizontal, 0f), new Vector2(Horizontal + 1f / 3f, 0.2f), FontSize: 2f,
+            color: Colors[Percentage]);
+
+            Horizontal += 1f / 3f;
+        }
     }
 
-    private void DrawCargoList(SurfaceContentManager.SurfaceManager Manager)
+    private void DrawAssemblersList(SurfaceContentManager.SurfaceManager Manager)
     {
-        Manager.AddTextBuilder("--- Cargo List ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
+        DrawCargoList(Manager, _Inventories.Where(x => x is IMyAssembler).ToList(), "Assembler's List");
+    }
+    private void DrawRefineriesList(SurfaceContentManager.SurfaceManager Manager)
+    {
+        DrawCargoList(Manager, _Inventories.Where(x => x is IMyRefinery).ToList(), "Refineries List");
+    }
+    private void DrawCargoContainersList(SurfaceContentManager.SurfaceManager Manager)
+    {
+        DrawCargoList(Manager, _Inventories.Where(x => x is IMyCargoContainer).ToList(), "Container's List");
+    }
+    private void DrawReactorList(SurfaceContentManager.SurfaceManager Manager)
+    {
+        DrawCargoList(Manager, _Inventories.Where(x => x is IMyReactor).ToList(), "Reactor's List");
+    }
+    private void DrawInventoriesList(SurfaceContentManager.SurfaceManager Manager)
+    {
+        DrawCargoList(Manager, _Inventories, "All Inventories List");
+    }
+    private void DrawCargoList(SurfaceContentManager.SurfaceManager Manager, List<IMyTerminalBlock> Inventories, string Title)
+    {
+        Manager.AddTextBuilder($"--- {Title} ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
         Manager.SaveLine();
 
-        foreach (IMyTerminalBlock Inventory in _Inventories)
+        int Index = 0;
+
+        foreach (IMyTerminalBlock Inventory in Inventories)
         {
             for (int i = 0; i < Inventory.InventoryCount; i++)
             {
                 float FillLevel = GetInventoryFillLevel(Inventory.GetInventory(i));
 
-                Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(0.8f, 0.1f));
+                Manager.AddBorderBuilder(new Vector2(0.1f, 0f), new Vector2(0.8f, 0.1f));
                 
-                Manager.AddSquareProgressBarBuilder(FillLevel, new Vector2(0f, 0f), new Vector2(0.8f, 0.1f), 270);
+                Manager.AddTextBuilder($"{++Index} -", new Vector2(-0.1f, 0f), new Vector2(0.1f, 0.1f), Alignment: TextAlignment.RIGHT);
+                Manager.AddSquareProgressBarBuilder(FillLevel, new Vector2(0.1f, 0f), new Vector2(0.8f, 0.1f), 270);
                 Manager.AddTextBuilder(String.Format("{0:0.0}%", FillLevel * 100f), new Vector2(0.75f, 0f), new Vector2(1f, 0.1f), Alignment: TextAlignment.RIGHT);
-                Manager.AddTextBuilder($"[{i}] - {Inventory.CustomName}", new Vector2(0f, 0f), new Vector2(0.85f, 0.095f), Alignment: TextAlignment.LEFT, ExtraPadding: true, color: Manager.BackgroundColor, FontSize: 0.7f);
+                Manager.AddTextBuilder($"[{i}] - {Inventory.CustomName}", new Vector2(0.1f, 0f), new Vector2(0.8f, 0.095f), Alignment: TextAlignment.LEFT, ExtraPadding: true, color: Manager.BackgroundColor, FontSize: 0.7f);
 
                 Manager.SaveLine();
             }
         }
     }
-        
-    private void DrawHorizontalProgressBarsTEST(SurfaceContentManager.SurfaceManager Manager)
+
+    private void DrawInventoryList(SurfaceContentManager.SurfaceManager Manager)
     {
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), null, new Color(250, 150, 150));
-        Manager.AddSquareProgressBarBuilder(0.85f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 3,
-        color: Colors[(float)Math.Round(0.85f, 1, MidpointRounding.AwayFromZero)]);
-        Manager.AddSpriteBuilder("IconHydrogen", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
-        color: Manager.BackgroundColor);
+        Dictionary<MyItemType, float> Items = GetInventoryItems();
+
+        Dictionary<string, Dictionary<MyItemType, float>> Groups = new Dictionary<string, Dictionary<MyItemType, float>>() {
+            { "Component's", GetInventoryItems(TypeId: "MyObjectBuilder_Component") },
+            { "Ingot's", GetInventoryItems(TypeId: "MyObjectBuilder_Ingot") },
+            { "Ores", GetInventoryItems(TypeId: "MyObjectBuilder_Ore") }
+        };
+
+        Manager.AddTextBuilder($"--- Item's List ---", new Vector2(0f, 0f), new Vector2(1f, 0.15f), FontSize: 1.25f);
         Manager.SaveLine();
 
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), null, new Color(150, 150, 255));
-        Manager.AddSquareProgressBarBuilder(0.75f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 3,
-        color: Colors[(float)Math.Round(0.75f, 1, MidpointRounding.AwayFromZero)]);
-        Manager.AddSpriteBuilder("IconOxygen", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
-        color: Manager.BackgroundColor);
-        Manager.SaveLine();
+        foreach (string Key in Groups.Keys)
+        {
+            Manager.AddTextBuilder($"<<{Key} summary>>", new Vector2(0f, 0f), new Vector2(1f, 0.1f));
+            Manager.SaveLine();
 
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f), new Vector2(0.9f, 0f), new Color(50, 255, 255));
-        Manager.AddSquareProgressBarBuilder(1f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270, 5, new Color(50, 255, 255));
-        Manager.AddSpriteBuilder("IconEnergy", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
-        color: Manager.BackgroundColor);
-        Manager.SaveLine();
+            foreach (MyItemType ItemType in Groups[Key].Keys)
+            {
+                float Amount = Groups[Key][ItemType];
+                string Suffix = "";
 
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(1f, 0.25f));
-        Manager.AddSquareProgressBarBuilder(0.25f, new Vector2(0f, 0f), new Vector2(1f, 0.25f), 270,
-        color: Colors[(float)Math.Round(0.25f, 1, MidpointRounding.AwayFromZero)]);
-        Manager.AddSpriteBuilder(@"Textures\FactionLogo\Builders\BuilderIcon_1.dds", new Vector2(0f, 0.025f), new Vector2(0.25f, 0.225f),
-        color: Manager.BackgroundColor);
-        Manager.SaveLine();
-    }
-    private void DrawVerticalProgressBarsTEST(SurfaceContentManager.SurfaceManager Manager)
-    {
-        Manager.AddBorderBuilder(new Vector2(0f, 0f), new Vector2(0.25f, 1f), null, new Color(250, 150, 150));
-        Manager.AddBorderBuilder(new Vector2(0.25f, 0f), new Vector2(0.5f, 1f), null, new Color(150, 150, 255));
-        Manager.AddBorderBuilder(new Vector2(0.5f, 0f), new Vector2(0.75f, 1f), new Vector2(0f, 0.8f), new Color(50, 255, 255));
-        Manager.AddBorderBuilder(new Vector2(0.75f, 0f), new Vector2(1f, 1f));
+                if (Amount >= 1000f)
+                {
+                    Amount *= 0.001f;
+                    Suffix += "k";
+                }
+                
+                if (ItemType.TypeId == "MyObjectBuilder_Component") Suffix += "";
+                else if (ItemType.TypeId == "MyObjectBuilder_Ingot") Suffix += " (kg)";
+                else if (ItemType.TypeId == "MyObjectBuilder_Ore") Suffix += " (kg)";
 
-        Manager.AddSquareProgressBarBuilder(0.85f, new Vector2(0f, 0f), new Vector2(0.25f, 1f), 0, 3,
-        color: Colors[(float)Math.Round(0.85f, 1, MidpointRounding.AwayFromZero)]);
-        Manager.AddSquareProgressBarBuilder(0.75f, new Vector2(0.25f, 0f), new Vector2(0.5f, 1f), 0, 3,
-        color: Colors[(float)Math.Round(0.75f, 1, MidpointRounding.AwayFromZero)]);
-        Manager.AddSquareProgressBarBuilder(1f, new Vector2(0.5f, 0f), new Vector2(0.75f, 1f), 0, 5, new Color(50, 255, 255));
-        Manager.AddSquareProgressBarBuilder(0.25f, new Vector2(0.75f, 0f), new Vector2(1f, 1f), 0,
-        color: Colors[(float)Math.Round(0.25f, 1, MidpointRounding.AwayFromZero)]);
+                string Prefix = "";
 
-        Manager.AddSpriteBuilder("IconHydrogen", new Vector2(0.025f, 0.75f), new Vector2(0.225f, 1f),
-        color: Manager.BackgroundColor);
-        Manager.AddSpriteBuilder("IconOxygen", new Vector2(0.025f + 0.25f, 0.75f), new Vector2(0.225f + 0.25f, 1f),
-        color: Manager.BackgroundColor);
-        Manager.AddSpriteBuilder("IconEnergy", new Vector2(0.025f + 0.5f, 0.75f), new Vector2(0.225f + 0.5f, 1f),
-        color: Manager.BackgroundColor);
-        Manager.AddSpriteBuilder(@"Textures\FactionLogo\Builders\BuilderIcon_1.dds", new Vector2(0.025f + 0.75f, 0.75f), new Vector2(0.225f + 0.75f, 1f),
-        color: Manager.BackgroundColor);
-        Manager.SaveLine();
+                Manager.AddTextBuilder(ItemType.SubtypeId.ToString(), new Vector2(0f, 0f), new Vector2(0.75f, 0.05f), FontSize: 0.8f, Alignment: TextAlignment.LEFT);
+                Manager.AddTextBuilder($"{Prefix}{Math.Round(Amount, 2)}{Suffix}", new Vector2(0.25f, 0f), new Vector2(1f, 0.05f), FontSize: 0.8f, Alignment: TextAlignment.RIGHT);
+                Manager.SaveLine();
+            }
+        }
+
+        // int Index = 0;
+
+        // foreach (IMyTerminalBlock Inventory in Inventories)
+        // {
+        //     for (int i = 0; i < Inventory.InventoryCount; i++)
+        //     {
+        //         float FillLevel = GetInventoryFillLevel(Inventory.GetInventory(i));
+
+        //         Manager.AddBorderBuilder(new Vector2(0.1f, 0f), new Vector2(0.8f, 0.1f));
+                
+        //         Manager.AddTextBuilder($"{++Index} -", new Vector2(-0.1f, 0f), new Vector2(0.1f, 0.1f), Alignment: TextAlignment.RIGHT);
+        //         Manager.AddSquareProgressBarBuilder(FillLevel, new Vector2(0.1f, 0f), new Vector2(0.8f, 0.1f), 270);
+        //         Manager.AddTextBuilder(String.Format("{0:0.0}%", FillLevel * 100f), new Vector2(0.75f, 0f), new Vector2(1f, 0.1f), Alignment: TextAlignment.RIGHT);
+        //         Manager.AddTextBuilder($"[{i}] - {Inventory.CustomName}", new Vector2(0.1f, 0f), new Vector2(0.8f, 0.095f), Alignment: TextAlignment.LEFT, ExtraPadding: true, color: Manager.BackgroundColor, FontSize: 0.7f);
+
+        //         Manager.SaveLine();
+        //     }
+        // }
     }
     #endregion
 }
 #endregion
 
-// Last update - 01.12.2022
+// Last update - 05.12.2022
 #region SurfaceContentManagerClass
 class SurfaceContentManager
 {   
@@ -959,14 +1064,14 @@ class SurfaceContentManager
             FontSize *= _Scale;
 
             Vector2 BlockSize = _Viewport.Size * (BottomRightCorner - TopLeftCorner);
-            Vector2 ContentSize = BlockSize - _Padding;
+            Vector2 ContentSize = BlockSize - _Padding - (ExtraPadding ? _Padding.X : 0);
             Vector2 Position = _Viewport.Position + _Viewport.Size * (BottomRightCorner + TopLeftCorner) * 0.5f;
             
             // Fix Size
             _Sprites.Add(new MySprite(SpriteType.TEXTURE, "SquareSimple", Position, BlockSize, Color.Transparent));
 
-            if (Alignment == TextAlignment.RIGHT) Position.X += ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X * 2f: 0);
-            if (Alignment == TextAlignment.LEFT) Position.X -= ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X * 2f : 0);
+            if (Alignment == TextAlignment.RIGHT) Position.X += ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X : 0);
+            if (Alignment == TextAlignment.LEFT) Position.X -= ContentSize.X * 0.5f - (ExtraPadding ? _Padding.X : 0);
 
             Vector2 TextSize = _Surface.MeasureStringInPixels(new StringBuilder(Text), "Debug", FontSize);
             while (TextSize.X >= ContentSize.X - _Padding.X * 2f)
@@ -1309,7 +1414,7 @@ class SurfaceContentManager
 
             SetupDrawSurface();
 
-            RunScroll(PixelsToScroll);
+            if (PixelsToScroll > 0) RunScroll(PixelsToScroll);
 
             MySpriteDrawFrame Frame = _Surface.DrawFrame();
 
@@ -1341,12 +1446,12 @@ class SurfaceContentManager
                 float LowerLimit = 0f;
                 float UpperLimit = Difference;
 
-                if (_ScrollValue <= LowerLimit  && _ScrollDirection <= 0)
+                if (_ScrollValue <= LowerLimit && _ScrollDirection <= 0)
                 {
                     _ScrollValue = LowerLimit;
                     _ScrollDirection++;
                 }
-                else if (_ScrollValue >= UpperLimit  && _ScrollDirection >= 0)
+                else if (_ScrollValue >= UpperLimit && _ScrollDirection >= 0)
                 {
                     _ScrollValue = UpperLimit;
                     _ScrollDirection--;
