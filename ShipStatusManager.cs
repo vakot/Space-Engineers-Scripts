@@ -1549,7 +1549,7 @@ class SurfaceContentManager
         }
         private void RunScroll(int Offset)
         {
-            float Difference = GetFrameHeight() - _Viewport.Size.Y + _Viewport.Position.Y;
+            float Difference = GetFrameHeight() - _Viewport.Size.Y + _Viewport.Position.Y - _Padding.Y * 2f;
 
             if (Difference > 0)
             {
