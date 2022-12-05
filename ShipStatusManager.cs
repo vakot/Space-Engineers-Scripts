@@ -5,15 +5,40 @@
 // ------------------ DESCRIPTION ------------------ \\
 
 /* 
- * Simple class that provides posibility to collect information about ship status.
+ * Simple script that provides posibility to collect information about ship status.
  * (power consumption, capacity, inventory fill level, etc.)
  * And display them to LCD panel's
+ *
+ * Minimal launch setup is:
+ * - Programmable Block
+ *
+ * Using tutorial:
+ * - Build a Programmable Block
+ * - Place script into
+ * - Edit settings in CustomData (optionally)
+ * - Build LCD panel's
+ * - Edit it's Name (add [LCD] tag)
+ * - Wait till script update (10s)
+ * - Edit LCD panel CustomData
  */
 
 // ---------------- ARGUMENTS LIST ----------------- \\
 
 /* 
  * Current version does not take any argument's
+ *
+ * CustomData argument's:
+ * - ores (display minimalistic ores stats)
+ * - ingots (display minimalistic ingots stats)
+ * - inventory (display inventory items like in AutoLCD by MMaster)
+ * -- i-[ores/ingots/components/tools/ammos/other] (same as inventory, but display only one type of items at the time)
+ * - powergraph (display power consumption graph)
+ * - inventories (display inventoryes list with status bar)
+ * -- assemblers (display assemblers inventoryes list with status bar)
+ * -- refineries (display refineries inventoryes list with status bar)
+ * -- containers (display containers inventoryes list with status bar)
+ * -- reactors (display reactors inventoryes list with status bar)
+ * - none (set by default and don't display any content)
  */
 
 // ----------------- CONFIGURATION ----------------- \\
