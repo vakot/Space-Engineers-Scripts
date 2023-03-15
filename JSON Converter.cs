@@ -11,13 +11,14 @@ public readonly static List<string> RunStatus = new List<string>
 // Variables
 int Counter = 0;
 JSON json;
+
 string Content = @"{
-    ""status-bar"":{
-        ""value"":0.25,
+    ""bar"":{
+        ""source"":""power"",
         ""position"":{
             ""x"":0,
             ""y"":0
-        }
+        },
         ""size"":{
             ""x"":256,
             ""y"":64
@@ -51,16 +52,13 @@ void Status()
 void Update()
 {
     Counter = 0;
-
-    json = new JSON(Content);
-    json.Convert();
 }
 
 Program() 
 {
     Runtime.UpdateFrequency = UpdateFrequency.Update10;
 
-    Update();
+    json = new JSON(Content);
 }
 
 void Main(string argument)
@@ -77,14 +75,16 @@ class JSON
     private char Separator = '.';
 
     public string Serialized { get; private set; }
-    public Dictionary<string, string> Deserialized = new Dictionary<string, string>();
+    public Dictionary<string, string> Deserialized { get; private set; } = new Dictionary<string, string>();
 
     public JSON(string serialized)
     {
         Serialized = serialized;
+
+        Convert();
     }
 
-    public void Convert()
+    private void Convert()
     {
         bool isKey = true;
 
