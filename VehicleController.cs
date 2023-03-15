@@ -11,7 +11,7 @@
  *  Exclude example: "Wheel Suspension 3x3 Right iGnOrE"
  *
  *  Script have the light manager. It use the same light source for Brake and Reverse Light's.
- *  You also can include light's to being controlled using [BrakeLightTag] keyword (Set in CONFIGURATION).
+ *  You also can include light's to being controlled using [LightKeyword] keyword (Set in CONFIGURATION).
  *  The keyword is case insensitive.
  *  Include example: "Interior Light - BrAkE"
  *
@@ -1977,7 +1977,6 @@ class SurfaceContentManager
                 }
             }
             
-
             Vector2 TextSize = _Surface.MeasureStringInPixels(new StringBuilder(_Text), "Debug", FontSize);
             Position = new Vector2(Position.X, Position.Y - TextSize.Y * 0.5f);
 
@@ -2339,7 +2338,7 @@ class SurfaceContentManager
         }
         private void RunScroll(int Offset)
         {
-            float Difference = GetFrameHeight() - _Viewport.Size.Y + _Viewport.Position.Y - _Padding.Y * 2f;
+            float Difference = GetFrameHeight() - _Viewport.Size.Y - _Viewport.Position.Y - _Padding.Y * 2f;
 
             if (Difference > 0)
             {

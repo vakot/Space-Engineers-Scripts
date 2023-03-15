@@ -1187,7 +1187,6 @@ class SurfaceContentManager
                 }
             }
             
-
             Vector2 TextSize = _Surface.MeasureStringInPixels(new StringBuilder(_Text), "Debug", FontSize);
             Position = new Vector2(Position.X, Position.Y - TextSize.Y * 0.5f);
 
