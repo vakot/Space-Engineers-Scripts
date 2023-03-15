@@ -86,20 +86,19 @@ class JSON
 
     public void Convert()
     {
-        string _Serialized = String.Concat(Serialized.Where(c => !Char.IsWhiteSpace(c)));
-        
         bool isKey = true;
 
+        string _Serialized = String.Concat(Serialized.Where(c => !Char.IsWhiteSpace(c)));
+        
         List<string> PreffixList = new List<string>();
-
         string CurrentKey = "";
         string CurrentValue = "";
 
-        for (int i = 0; i < Serialized.Length; i++)
+        for (int i = 0; i < _Serialized.Length; i++)
         {
             string Preffix = string.Join(Separator.ToString(), PreffixList.ToArray()) + Separator;
 
-            switch (Serialized[i])
+            switch (_Serialized[i])
             {
                 case '{':
                     isKey = true;
@@ -124,10 +123,11 @@ class JSON
                     isKey = false;
                     break;
                 default:
-                    if (isKey)
-                        CurrentKey += Serialized[i].ToString();
-                    else
-                        CurrentValue += Serialized[i].ToString();
+                    if (_Serialized[i] != '\"')
+                    {
+                        if (isKey) CurrentKey += _Serialized[i].ToString();
+                        else CurrentValue += _Serialized[i].ToString();
+                    }
                     break;
             }
         }
@@ -137,6 +137,7 @@ class JSON
     {
         if (string.IsNullOrWhiteSpace(Key) || string.IsNullOrWhiteSpace(Value)) return;
         if (Deserialized.ContainsKey(Key)) return;
+
         Deserialized.Add(Key, Value);
     }
 }
